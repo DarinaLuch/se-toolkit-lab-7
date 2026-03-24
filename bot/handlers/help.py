@@ -1,0 +1,21 @@
+def handle_help(args: str = "") -> str:
+    """Handle /help command."""
+    return (
+        "📚 Available Commands\n\n"
+        "**Basic Commands:**\n"
+        "/start - Welcome message\n"
+        "/help - Show this help\n"
+        "/health - Check if backend is working\n\n"
+        "**Data Queries:**\n"
+        "/labs - List all available labs\n"
+        "/scores <lab> - Get scores for a specific lab\n"
+        "  Example: /scores lab-04\n\n"
+        "**AI-Powered Queries:**\n"
+        "Just ask in natural language!\n"
+        "• What's my highest score?\n"
+        "• Which lab is the hardest?\n"
+        "• Show me tasks I failed\n\n"
+        "**Testing:**\n"
+        "The bot supports --test mode for development.\n"
+        "Use: uv run bot.py --test '/command'"
+    )
