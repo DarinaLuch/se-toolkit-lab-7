@@ -57,17 +57,19 @@ services:
       retries: 5
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: ${REGISTRY_PREFIX:-harbor.pg.innopolis.university/docker-hub-cache/}dpage/pgadmin4:latest
     restart: unless-stopped
     networks:
       - lms-network
-    ports:
-      - ${PGADMIN_HOST_ADDRESS:-127.0.0.1}:${PGADMIN_HOST_PORT:-42004}:80
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:?'PGADMIN_EMAIL is required'}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:?'PGADMIN_PASSWORD is required'}
+      - SCRIPT_NAME=/utils/pgadmin
+    ports:
+      - ${PGADMIN_HOST_ADDRESS:?'PGADMIN_HOST_ADDRESS is required'}:${PGADMIN_HOST_PORT:?'PGADMIN_HOST_PORT is required'}:80
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   caddy:
     build:
@@ -86,27 +88,27 @@ services:
       - ${LMS_API_HOST_ADDRESS:?'LMS_API_HOST_ADDRESS is required'}:${LMS_API_HOST_PORT:?'LMS_API_HOST_PORT is required'}:${CADDY_CONTAINER_PORT}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-
-  bot:
+    bot:
     build:
       context: .
       dockerfile: bot/Dockerfile
     container_name: se-toolkit-lab-7-bot
     restart: unless-stopped
-    networks:
-      - lms-network
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
-      - LMS_API_BASE_URL=http://backend:${BACKEND_CONTAINER_PORT}
+      - LMS_API_BASE_URL=http://backend:8000
       - LMS_API_KEY=${LMS_API_KEY}
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_API_BASE_URL=${LLM_API_BASE_URL:-http://host.docker.internal:42005/v1}
       - LLM_API_MODEL=${LLM_API_MODEL:-coder-model}
+    env_file:
+      - .env.docker.secret
     depends_on:
       - backend
+    networks:
+      - lms-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
 volumes:
   postgres_data:
 
